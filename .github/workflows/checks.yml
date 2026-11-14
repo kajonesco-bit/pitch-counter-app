@@ -1,0 +1,29 @@
+name: Checks
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Lint, typecheck and Expo Doctor
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint
+        run: npx expo lint
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Expo Doctor
+        run: npx expo-doctor

@@ -11,7 +11,40 @@ any state association or league.
 Stage 1: enter the game, teams, pitchers and final pitch totals on one screen,
 then create a PDF and share it. Signing and saving games come in later stages.
 
-## Run it on your iPhone (Windows)
+## Install on your iPhone with TestFlight (no computer setup)
+
+This builds the app in Expo's cloud and delivers it through Apple's TestFlight
+app. You need an Apple Developer Program membership and a free Expo account
+(https://expo.dev/signup). Nothing is installed on your own computer: the
+commands run in a GitHub Codespace, a terminal that opens in the browser.
+
+1. On the iPhone, install **TestFlight** from the App Store.
+2. In Safari, open this repository on github.com, switch to the branch you
+   want to build, then choose **Code > Codespaces > Create codespace**.
+   Wait for the terminal at the bottom to finish `npm ci`.
+3. In that terminal run:
+
+   ```sh
+   npx testflight
+   ```
+
+4. Answer the prompts. You sign in to Expo and to Apple (Apple ID, password,
+   two-factor code) inside the terminal; those go to Expo and Apple directly.
+   Accept the suggested choices (press Enter) to let Expo create the signing
+   certificate, provisioning profile and App Store Connect API key.
+5. The build takes roughly 10-20 minutes in Expo's cloud and is then uploaded
+   to App Store Connect. Apple emails you when it has finished processing.
+6. In App Store Connect (https://appstoreconnect.apple.com) open the app >
+   **TestFlight** > **Internal Testing** > **+**, create a group, and add
+   yourself as a tester.
+7. Open **TestFlight** on the iPhone and install Pitch Counter.
+8. Stop the codespace when done (github.com/codespaces) so it does not use up
+   your free hours.
+
+To ship a newer version later, repeat steps 2-3; the build number goes up
+automatically.
+
+## Run it during development with Expo Go (Windows)
 
 One-time setup:
 
@@ -50,5 +83,9 @@ choose **Allow**.
 ## Checks
 
 ```powershell
+npx expo lint
 npx tsc --noEmit
+npx expo-doctor
 ```
+
+These also run automatically on every pull request (GitHub Actions, "Checks").
