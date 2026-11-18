@@ -1,5 +1,6 @@
-import { parsePitches, teamTotal } from '../game';
-import { Game, TeamEntry } from '../types';
+import { gameStatus, reportFingerprint, teamTotal, validSignature } from '../model/game';
+import { signatureSvg } from '../model/signature';
+import { Game, Signature, Team } from '../model/types';
 
 // Builds the HTML page that expo-print turns into a PDF.
 // This file has no React Native code in it, so the layout can be changed and
@@ -15,7 +16,7 @@ function escapeHtml(text: string): string {
     .replace(/'/g, '&#39;');
 }
 
-function teamTable(heading: string, team: TeamEntry): string {
+function teamTable(heading: string, team: Team): string {
   const rows = team.pitchers
     .map(
       (pitcher, index) => `
@@ -23,7 +24,7 @@ function teamTable(heading: string, team: TeamEntry): string {
           <td class="num">${index + 1}</td>
           <td>${escapeHtml(pitcher.name.trim())}</td>
           <td class="num">${escapeHtml(pitcher.jersey.trim())}</td>
-          <td class="num">${parsePitches(pitcher.pitches) ?? ''}</td>
+          <td class="num">${pitcher.pitches}</td>
         </tr>`
     )
     .join('');
@@ -51,17 +52,47 @@ function teamTable(heading: string, team: TeamEntry): string {
     </section>`;
 }
 
-function signatureBlock(role: string, teamName: string): string {
+function formatTime(iso: string): string {
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? '' : date.toLocaleString();
+}
+
+/** A signature line. Holds the coach's real signature when there is a valid one, otherwise stays blank for a pen. */
+function signatureBlock(role: string, teamName: string, signature: Signature | null): string {
+  const drawn = signature
+    ? signatureSvg(signature.strokes, signature.width, signature.height)
+    : '';
+  const details = signature
+    ? `<div class="sig-name">${escapeHtml(signature.coachName)}</div>
+      <div class="sig-team">${escapeHtml(teamName.trim())}</div>
+      <div class="sig-time">Signed ${escapeHtml(formatTime(signature.signedAt))}</div>`
+    : `<div class="sig-name blank">Printed name: ______________________</div>
+      <div class="sig-team">${escapeHtml(teamName.trim())}</div>`;
   return `
     <div class="signature">
-      <div class="sig-line"></div>
+      <div class="sig-line">${drawn}</div>
       <div class="sig-label">${role} head coach signature</div>
-      <div class="sig-team">${escapeHtml(teamName.trim())}</div>
+      ${details}
     </div>`;
+}
+
+function statusText(game: Game): string {
+  switch (gameStatus(game)) {
+    case 'signed':
+      return 'Signed by both head coaches';
+    case 'partly-signed':
+      return validSignature(game, 'visitor')
+        ? 'Signed by the visiting team head coach only'
+        : 'Signed by the home team head coach only';
+    default:
+      return 'Not signed';
+  }
 }
 
 export function buildGameHtml(game: Game, generatedAt: Date = new Date()): string {
   const level = game.level.trim();
+  const visitorSignature = validSignature(game, 'visitor');
+  const homeSignature = validSignature(game, 'home');
 
   return `<!DOCTYPE html>
 <html>
@@ -80,7 +111,8 @@ export function buildGameHtml(game: Game, generatedAt: Date = new Date()): strin
   .notice { font-size: 9pt; color: #555; margin: 0 0 14pt; }
   .meta { width: 100%; border-collapse: collapse; margin-bottom: 6pt; }
   .meta td { padding: 3pt 0; border: none; font-size: 12pt; }
-  .meta .label { color: #555; width: 90pt; }
+  .meta .label { color: #555; width: 90pt; vertical-align: top; }
+  .meta td, h2, .team td, .sig-team, .sig-name { overflow-wrap: anywhere; }
   h2 { font-size: 13pt; margin: 16pt 0 6pt; }
   .team { page-break-inside: avoid; }
   table { width: 100%; border-collapse: collapse; }
@@ -93,8 +125,12 @@ export function buildGameHtml(game: Game, generatedAt: Date = new Date()): strin
   .signatures { margin-top: 34pt; page-break-inside: avoid; }
   .signatures table td { width: 50%; padding: 0 12pt 0 0; vertical-align: top; }
   .sig-line { border-bottom: 1pt solid #111; height: 48pt; }
+  .sig-svg { display: block; width: 100%; height: 48pt; }
   .sig-label { font-size: 9pt; color: #555; margin-top: 3pt; }
+  .sig-name { font-size: 11pt; font-weight: 600; margin-top: 2pt; }
+  .sig-name.blank { font-weight: normal; color: #555; }
   .sig-team { font-size: 11pt; }
+  .sig-time { font-size: 9pt; color: #555; }
   .footer { margin-top: 22pt; font-size: 8pt; color: #777; }
 </style>
 </head>
@@ -110,6 +146,7 @@ export function buildGameHtml(game: Game, generatedAt: Date = new Date()): strin
     ${level ? `<tr><td class="label">Level</td><td>${escapeHtml(level)}</td></tr>` : ''}
     <tr><td class="label">Visiting team</td><td>${escapeHtml(game.visitor.name.trim())}</td></tr>
     <tr><td class="label">Home team</td><td>${escapeHtml(game.home.name.trim())}</td></tr>
+    <tr><td class="label">Status</td><td>${statusText(game)}</td></tr>
   </table>
 
   ${teamTable('Visiting team', game.visitor)}
@@ -118,13 +155,15 @@ export function buildGameHtml(game: Game, generatedAt: Date = new Date()): strin
   <div class="signatures">
     <table>
       <tr>
-        <td>${signatureBlock('Visiting team', game.visitor.name)}</td>
-        <td>${signatureBlock('Home team', game.home.name)}</td>
+        <td>${signatureBlock('Visiting team', game.visitor.name, visitorSignature)}</td>
+        <td>${signatureBlock('Home team', game.home.name, homeSignature)}</td>
       </tr>
     </table>
   </div>
 
-  <p class="footer">Generated ${escapeHtml(generatedAt.toLocaleString())}</p>
+  <p class="footer">
+    Generated ${escapeHtml(generatedAt.toLocaleString())} · Report check code ${reportFingerprint(game)}
+  </p>
 </body>
 </html>`;
 }

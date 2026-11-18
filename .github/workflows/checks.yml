@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   checks:
-    name: Lint, typecheck and Expo Doctor
+    name: Lint, typecheck, tests and Expo Doctor
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -25,5 +25,7 @@ jobs:
         run: npx expo lint
       - name: Typecheck
         run: npx tsc --noEmit
+      - name: Tests
+        run: npx jest --ci
       - name: Expo Doctor
         run: npx expo-doctor

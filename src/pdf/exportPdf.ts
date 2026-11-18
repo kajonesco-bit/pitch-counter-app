@@ -2,18 +2,21 @@ import { Directory, File, Paths } from 'expo-file-system';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 
-import { Game } from '../types';
+import { gameStatus } from '../model/game';
+import { Game } from '../model/types';
 import { buildGameHtml } from './buildGameHtml';
 
 /** Turns "Central High (JV)" into "Central-High-JV" so it is safe in a file name. */
 function fileSafe(text: string): string {
-  return text.trim().replace(/[^A-Za-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'Team';
+  const safe = text.trim().replace(/[^A-Za-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  return safe.slice(0, 30).replace(/-+$/, '') || 'Team';
 }
 
-function pdfFileName(game: Game): string {
+export function pdfFileName(game: Game): string {
   const [month, day, year] = game.date.trim().split('/');
   const date = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-  return `PitchCount_${date}_${fileSafe(game.visitor.name)}_at_${fileSafe(game.home.name)}.pdf`;
+  const status = gameStatus(game) === 'signed' ? 'Signed' : 'Unsigned';
+  return `PitchCount_${date}_${fileSafe(game.visitor.name)}_at_${fileSafe(game.home.name)}_${status}.pdf`;
 }
 
 /**

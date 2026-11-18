@@ -6,10 +6,26 @@ that both coaches can review, sign on one phone, and export as a printable PDF.
 The PDF is an **unofficial record**. It is not an official or approved form of
 any state association or league.
 
-## Current status
+## What it does (version 1.1)
 
-Stage 1: enter the game, teams, pitchers and final pitch totals on one screen,
-then create a PDF and share it. Signing and saving games come in later stages.
+- **Saved games**: every game is saved on the iPhone as you go. The first
+  screen lists them, marked **Draft**, **Signed by 1 of 2**, or **Signed**.
+- **Live pitch counting**: add any number of pitchers to either team and count
+  with large **+1** / **−1** buttons. Counts never go below zero; tap a count to
+  type a correction. Pitcher and team totals update as you go.
+- **Final review**: one screen with both teams, every pitcher, jersey numbers
+  and final totals, before anyone signs.
+- **Finger signatures**: each head coach types their name and signs on the
+  screen. The real signature lines are placed in the PDF.
+- **Signature protection**: a signed game is locked. Changing anything the
+  coaches approved (date, level, team names, any pitcher's name, number or
+  pitch total, adding or removing a pitcher) removes **both** signatures, and
+  both coaches must sign again. The PDF only ever shows signatures that match
+  the numbers printed on it.
+- **PDF**: the same layout as before, with the unofficial-record disclaimer, a
+  status line, and a report check code. Signed files end in `_Signed.pdf`.
+
+Nothing leaves the phone unless you share a PDF. There are no accounts.
 
 ## Install on your iPhone with TestFlight (no computer setup)
 
@@ -74,17 +90,23 @@ choose **Allow**.
 
 | File | What it does |
 | --- | --- |
-| `App.tsx` | Starts the app and shows the screen |
-| `src/screens/GameFormScreen.tsx` | The entry screen |
-| `src/game.ts` | New-game defaults, totals, validation |
+| `src/app/index.tsx` | Saved games list (first screen) |
+| `src/app/game/[id]/index.tsx` | Live pitch counting and game details |
+| `src/app/game/[id]/review.tsx` | Final review, signatures, PDF |
+| `src/app/game/[id]/sign.tsx` | One coach's signature |
+| `src/model/game.ts` | Counting, totals, checks, signature protection |
+| `src/state/gameStore.ts` | Saves every change and applies the signature rule |
+| `src/storage/fileRepository.ts` | Game files on the iPhone |
 | `src/pdf/buildGameHtml.ts` | Layout of the PDF |
 | `src/pdf/exportPdf.ts` | Creates, saves and shares the PDF |
+| `tests/` | Automated tests |
 
 ## Checks
 
 ```powershell
 npx expo lint
 npx tsc --noEmit
+npx jest
 npx expo-doctor
 ```
 
