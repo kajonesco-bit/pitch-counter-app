@@ -11,7 +11,8 @@
   "submit": {
     "production": {
       "ios": {
-        "appName": "Pitch Counter: Signed Game Log"
+        "appName": "Pitch Counter: Signed Game Log",
+        "ascAppId": "6835624387"
       }
     }
   }

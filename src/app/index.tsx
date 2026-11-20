@@ -1,5 +1,5 @@
 import Constants from 'expo-constants';
-import { router } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { useMemo } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -61,9 +61,12 @@ export default function GamesScreen() {
       )}
       ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
       ListFooterComponent={
-        <Text style={styles.footer}>
-          Games are saved only on this iPhone.{'\n'}Version {Constants.expoConfig?.version ?? ''}
-        </Text>
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>
+            Games are saved only on this iPhone.{'\n'}Version {Constants.expoConfig?.version ?? ''}
+          </Text>
+          <Link href="/privacy" style={styles.privacyLink}>Privacy Policy</Link>
+        </View>
       }
     />
   );
@@ -74,5 +77,7 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 15, fontWeight: '600', color: colors.muted, textTransform: 'uppercase' },
   topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
   matchup: { fontSize: 18, fontWeight: '600', color: colors.text },
-  footer: { fontSize: 13, color: colors.muted, textAlign: 'center', marginTop: 20 },
+  footer: { alignItems: 'center', gap: 8, marginTop: 20 },
+  footerText: { fontSize: 13, color: colors.muted, textAlign: 'center' },
+  privacyLink: { color: colors.blue, fontSize: 16, paddingHorizontal: 12, paddingVertical: 12 },
 });
