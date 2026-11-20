@@ -19,7 +19,10 @@ export default function RootLayout() {
         <Stack.Screen name="game/[id]/review" options={{ title: 'Review & Sign' }} />
         <Stack.Screen
           name="game/[id]/sign"
-          options={{ title: 'Coach Signature', presentation: 'modal', gestureEnabled: false }}
+          // A normal full screen, not a swipe-down sheet: the sheet's own drag
+          // gesture cancels finger touches, which cut signature lines short.
+          // Swipe-back is off so a stroke near the left edge cannot leave the screen.
+          options={{ title: 'Coach Signature', gestureEnabled: false, fullScreenGestureEnabled: false }}
         />
       </Stack>
       <StatusBar style="dark" />

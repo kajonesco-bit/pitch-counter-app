@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import SignaturePad, { SignatureDrawing } from '../../../components/SignaturePad';
@@ -46,7 +46,7 @@ export default function SignScreen() {
 
   return (
     <SafeAreaView style={ui.screen} edges={['bottom', 'left', 'right']}>
-      <Pressable style={styles.body} onPress={Keyboard.dismiss} accessible={false}>
+      <View style={styles.body}>
         <Text style={styles.role}>{sideLabel(side)} head coach</Text>
         <Text style={styles.team} numberOfLines={2}>
           {game[side].name.trim()}
@@ -84,7 +84,7 @@ export default function SignScreen() {
           <Button title="Save signature" style={{ flex: 2 }} disabled={!canSave} onPress={save} />
         </View>
         <Button title="Cancel" variant="secondary" onPress={() => router.back()} />
-      </Pressable>
+      </View>
     </SafeAreaView>
   );
 }
