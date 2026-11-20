@@ -28,6 +28,11 @@
     "plugins": [
       "expo-router"
     ],
-    "scheme": "pitchcounter"
+    "scheme": "pitchcounter",
+    "extra": {
+      "eas": {
+        "projectId": "f326c338-721b-4e80-8622-0d6f41e798c1"
+      }
+    }
   }
 }
