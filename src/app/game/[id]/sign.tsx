@@ -1,7 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import SignaturePad, { SignatureDrawing } from '../../../components/SignaturePad';
 import { Button, colors, styles as ui } from '../../../components/ui';
@@ -45,52 +44,57 @@ export default function SignScreen() {
   }
 
   return (
-    <SafeAreaView style={ui.screen} edges={['bottom', 'left', 'right']}>
-      <View style={styles.body}>
-        <Text style={styles.role}>{sideLabel(side)} head coach</Text>
-        <Text style={styles.team} numberOfLines={2}>
-          {game[side].name.trim()}
-        </Text>
-        <Text style={ui.muted}>
-          By signing, you confirm the final pitch totals on the review screen:{' '}
-          {TEAM_SIDES.map((s) => `${game[s].name.trim()} ${teamTotal(game[s])}`).join(', ')}.
-        </Text>
+    <ScrollView
+      style={ui.screen}
+      contentContainerStyle={styles.body}
+      contentInsetAdjustmentBehavior="automatic"
+      automaticallyAdjustKeyboardInsets
+      keyboardShouldPersistTaps="handled"
+      canCancelContentTouches={false}
+    >
+      <Text style={styles.role}>{sideLabel(side)} head coach</Text>
+      <Text style={styles.team} numberOfLines={2}>
+        {game[side].name.trim()}
+      </Text>
+      <Text style={ui.muted}>
+        By signing, you confirm the final pitch totals on the review screen:{' '}
+        {TEAM_SIDES.map((s) => `${game[s].name.trim()} ${teamTotal(game[s])}`).join(', ')}.
+      </Text>
 
-        <View>
-          <Text style={ui.fieldLabel}>Coach’s printed name</Text>
-          <TextInput
-            style={ui.input}
-            placeholder="First and last name"
-            placeholderTextColor={colors.placeholder}
-            value={coachName}
-            onChangeText={setCoachName}
-            autoCapitalize="words"
-            autoCorrect={false}
-            maxLength={MAX_PERSON_NAME}
-            returnKeyType="done"
-          />
-        </View>
-
-        <SignaturePad strokes={drawing.strokes} onChange={setDrawing} />
-
-        <View style={ui.row}>
-          <Button
-            title="Clear"
-            variant="secondary"
-            style={{ flex: 1 }}
-            disabled={drawing.strokes.length === 0}
-            onPress={() => setDrawing({ strokes: [], width: 0, height: 0 })}
-          />
-          <Button title="Save signature" style={{ flex: 2 }} disabled={!canSave} onPress={save} />
-        </View>
-        <Button title="Cancel" variant="secondary" onPress={() => router.back()} />
+      <View>
+        <Text style={ui.fieldLabel}>Coach’s printed name</Text>
+        <TextInput
+          style={ui.input}
+          placeholder="First and last name"
+          placeholderTextColor={colors.placeholder}
+          value={coachName}
+          onChangeText={setCoachName}
+          autoCapitalize="words"
+          autoCorrect={false}
+          maxLength={MAX_PERSON_NAME}
+          returnKeyType="done"
+        />
       </View>
-    </SafeAreaView>
+
+      <SignaturePad strokes={drawing.strokes} onChange={setDrawing} />
+
+      <View style={ui.row}>
+        <Button
+          title="Clear"
+          variant="secondary"
+          style={{ flex: 1 }}
+          disabled={drawing.strokes.length === 0}
+          onPress={() => setDrawing({ strokes: [], width: 0, height: 0 })}
+        />
+        <Button title="Save signature" style={{ flex: 2 }} disabled={!canSave} onPress={save} />
+      </View>
+      <Button title="Cancel" variant="secondary" onPress={() => router.back()} />
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  body: { flex: 1, padding: 16, gap: 14 },
+  body: { flexGrow: 1, padding: 16, gap: 14 },
   role: { fontSize: 14, fontWeight: '700', color: colors.muted, textTransform: 'uppercase' },
   team: { fontSize: 22, fontWeight: '700', color: colors.text },
 });
