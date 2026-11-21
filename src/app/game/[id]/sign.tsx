@@ -16,6 +16,8 @@ export default function SignScreen() {
   const game = useGame(params.id);
   const [coachName, setCoachName] = useState('');
   const [drawing, setDrawing] = useState<SignatureDrawing>({ strokes: [], width: 0, height: 0 });
+  // The screen must not scroll while a finger is on the signature box.
+  const [signing, setSigning] = useState(false);
 
   if (!game) {
     return (
@@ -51,6 +53,7 @@ export default function SignScreen() {
       automaticallyAdjustKeyboardInsets
       keyboardShouldPersistTaps="handled"
       canCancelContentTouches={false}
+      scrollEnabled={!signing}
     >
       <Text style={styles.role}>{sideLabel(side)} head coach</Text>
       <Text style={styles.team} numberOfLines={2}>
@@ -76,7 +79,7 @@ export default function SignScreen() {
         />
       </View>
 
-      <SignaturePad strokes={drawing.strokes} onChange={setDrawing} />
+      <SignaturePad strokes={drawing.strokes} onChange={setDrawing} onSigningChange={setSigning} />
 
       <View style={ui.row}>
         <Button
