@@ -10,6 +10,8 @@ export type SignatureDrawing = { strokes: string[]; width: number; height: numbe
 type Props = {
   strokes: string[];
   onChange: (drawing: SignatureDrawing) => void;
+  /** Told when a finger goes down on the box (true) and lifts (false), so the screen can stop scrolling meanwhile. */
+  onSigningChange?: (signing: boolean) => void;
 };
 
 const INK = { fill: 'none', stroke: colors.text, strokeWidth: 3, strokeLinecap: 'round', strokeLinejoin: 'round' } as const;
@@ -32,7 +34,7 @@ const FinishedStrokes = memo(function FinishedStrokes({ strokes }: { strokes: st
  * finger always lands on the same element (never on the hint text or on ink
  * already drawn).
  */
-export default function SignaturePad({ strokes, onChange }: Props) {
+export default function SignaturePad({ strokes, onChange, onSigningChange }: Props) {
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [currentPath, setCurrentPath] = useState('');
   const recorder = useRef<StrokeRecorder | null>(null);
@@ -44,6 +46,7 @@ export default function SignaturePad({ strokes, onChange }: Props) {
 
   function start(event: GestureResponderEvent) {
     Keyboard.dismiss();
+    onSigningChange?.(true);
     rec().begin(event.nativeEvent);
     setCurrentPath(rec().currentPath());
   }
@@ -55,6 +58,7 @@ export default function SignaturePad({ strokes, onChange }: Props) {
   function finish() {
     const path = rec().end();
     setCurrentPath('');
+    onSigningChange?.(false);
     if (path) onChange({ strokes: [...strokes, path], width: size.width, height: size.height });
   }
 

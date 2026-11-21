@@ -16,6 +16,7 @@ const PAD_X = 16;
 const PAD_Y = 310;
 
 let latest: SignatureDrawing = { strokes: [], width: 0, height: 0 };
+let signingLog: boolean[] = [];
 let clear: () => void = () => {};
 
 /** Same wiring as the signing screen: the screen holds the strokes; Clear empties them. */
@@ -23,10 +24,13 @@ function Harness() {
   const [drawing, setDrawing] = useState<SignatureDrawing>({ strokes: [], width: 0, height: 0 });
   latest = drawing;
   clear = () => setDrawing({ strokes: [], width: 0, height: 0 });
-  return <SignaturePad strokes={drawing.strokes} onChange={setDrawing} />;
+  return (
+    <SignaturePad strokes={drawing.strokes} onChange={setDrawing} onSigningChange={(on) => signingLog.push(on)} />
+  );
 }
 
 function setup() {
+  signingLog = [];
   let tree!: ReactTestRenderer;
   act(() => {
     tree = create(<Harness />);
@@ -55,6 +59,17 @@ describe('signature pad (component)', () => {
     expect(surface().props.onResponderTerminationRequest()).toBe(false);
     expect(surface().props.onStartShouldSetResponder()).toBe(true);
     expect(surface().props.onMoveShouldSetResponder()).toBe(true);
+  });
+
+  it('tells the screen to stop scrolling while a finger is down, and to resume after', () => {
+    const { stroke, surface } = setup();
+    stroke(handwritingStroke(20, 110, 30), { lift: false });
+    expect(signingLog).toEqual([true]);
+    act(() => surface().props.onResponderRelease({ nativeEvent: touchAt(PAD_X, PAD_Y, 0, 0) }));
+    expect(signingLog).toEqual([true, false]);
+    stroke(handwritingStroke(20, 110, 10), { lift: false });
+    act(() => surface().props.onResponderTerminate({ nativeEvent: touchAt(PAD_X, PAD_Y, 0, 0) }));
+    expect(signingLog).toEqual([true, false, true, false]); // an interrupted touch also unlocks scrolling
   });
 
   it('shows the line live while the finger moves, as one growing stroke', () => {
