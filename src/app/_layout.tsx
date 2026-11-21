@@ -15,6 +15,7 @@ export default function RootLayout() {
         }}
       >
         <Stack.Screen name="index" options={{ title: 'Pitch Counter' }} />
+        <Stack.Screen name="privacy" options={{ title: 'Privacy Policy' }} />
         <Stack.Screen name="game/[id]/index" options={{ title: 'Game' }} />
         <Stack.Screen name="game/[id]/review" options={{ title: 'Review & Sign' }} />
         <Stack.Screen
