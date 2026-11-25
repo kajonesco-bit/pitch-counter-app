@@ -2,7 +2,7 @@
 export const privacyPolicy = {
   "appName": "Pitch Counter: Signed Game Log",
   "effectiveDate": "November 20, 2026",
-  "introduction": "Pitch Counter: Signed Game Log is provided by Kyle Jones. This policy describes version 1.1.1’s game-recording features.",
+  "introduction": "Pitch Counter: Signed Game Log is provided by Kyle Jones. This policy describes version 1.2’s game-recording features and the optional Pitch Counter Pro purchase.",
   "sections": [
     {
       "heading": "Information you enter",
@@ -11,6 +11,10 @@ export const privacyPolicy = {
     {
       "heading": "Storage and developer access",
       "text": "The app stores game records and generated PDF reports in its local document storage on your iPhone. It does not require an account and does not send those records to a developer-operated server. The app has no developer-operated advertising or analytics service, and the developer does not sell game data or use it for cross-app tracking."
+    },
+    {
+      "heading": "In-app purchase",
+      "text": "Pitch Counter Pro is an optional one-time in-app purchase, not a subscription. Apple processes the payment under its own terms and privacy policy; the developer does not receive your payment details. The app keeps a record on your iPhone that Pro is unlocked and how many of the free signed reports have been used, and asks the App Store whether your Apple Account owns Pro so that Restore Purchases works. This information is not sent to a developer-operated server."
     },
     {
       "heading": "Sharing you choose",

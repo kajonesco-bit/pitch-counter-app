@@ -1,16 +1,29 @@
 import Constants from 'expo-constants';
 import { Link, router } from 'expo-router';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Button, Card, colors, StatusBadge, styles as ui } from '../components/ui';
+import { FREE_SIGNED_REPORTS, freeReportsRemaining } from '../model/entitlements';
 import { gameStatus, matchupTitle, teamTotal } from '../model/game';
 import { Game } from '../model/types';
+import { appStateStore, useAppState } from '../state/useApp';
 import { gameStore, useGames } from '../state/useGames';
 
 /** Saved games, newest first. Drafts open for counting; signed games open on the review screen. */
 export default function GamesScreen() {
   const games = useGames();
+  const appState = useAppState();
+
+  // Introduce Pro once, on this list screen only (never during counting). Always dismissible.
+  useEffect(() => {
+    if (appStateStore().getState().onboardingSeen) return;
+    const timer = setTimeout(() => {
+      appStateStore().markOnboardingSeen();
+      if (!appStateStore().getState().pro.owned) router.navigate({ pathname: '/pro', params: { reason: 'welcome' } });
+    }, 700);
+    return () => clearTimeout(timer);
+  }, []);
   const list = useMemo(
     () => Object.values(games).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
     [games]
@@ -65,6 +78,18 @@ export default function GamesScreen() {
           <Text style={styles.footerText}>
             Games are saved only on this iPhone.{'\n'}Version {Constants.expoConfig?.version ?? ''}
           </Text>
+          <Pressable
+            onPress={() => router.navigate({ pathname: '/pro', params: { reason: 'settings' } })}
+            style={styles.proRow}
+            accessibilityRole="button"
+          >
+            <Text style={styles.proTitle}>{appState.pro.owned ? 'Pitch Counter Pro ✓' : 'Pitch Counter Pro'}</Text>
+            <Text style={styles.footerText}>
+              {appState.pro.owned
+                ? 'Unlimited signed reports unlocked'
+                : `${freeReportsRemaining(appState)} of ${FREE_SIGNED_REPORTS} free signed reports left · Restore Purchases`}
+            </Text>
+          </Pressable>
           <Link href="/privacy" style={styles.privacyLink}>Privacy Policy</Link>
         </View>
       }
@@ -79,5 +104,7 @@ const styles = StyleSheet.create({
   matchup: { fontSize: 18, fontWeight: '600', color: colors.text },
   footer: { alignItems: 'center', gap: 8, marginTop: 20 },
   footerText: { fontSize: 13, color: colors.muted, textAlign: 'center' },
+  proRow: { alignItems: 'center', gap: 2, paddingVertical: 8, paddingHorizontal: 12 },
+  proTitle: { fontSize: 16, fontWeight: '600', color: colors.blue },
   privacyLink: { color: colors.blue, fontSize: 16, paddingHorizontal: 12, paddingVertical: 12 },
 });

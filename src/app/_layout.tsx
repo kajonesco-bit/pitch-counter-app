@@ -1,9 +1,18 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
 
 import { colors } from '../components/ui';
+import { appStateStore, proController } from '../state/useApp';
 
 export default function RootLayout() {
+  useEffect(() => {
+    // First start of 1.2: protect reports that were already signed before anything else happens.
+    appStateStore().getState();
+    // Load the Pro price and confirm any earlier purchase in the background.
+    void proController().start();
+  }, []);
+
   return (
     <>
       <Stack
@@ -16,6 +25,7 @@ export default function RootLayout() {
       >
         <Stack.Screen name="index" options={{ title: 'Pitch Counter' }} />
         <Stack.Screen name="privacy" options={{ title: 'Privacy Policy' }} />
+        <Stack.Screen name="pro" options={{ title: 'Pitch Counter Pro', presentation: 'modal' }} />
         <Stack.Screen name="game/[id]/index" options={{ title: 'Game' }} />
         <Stack.Screen name="game/[id]/review" options={{ title: 'Review & Sign' }} />
         <Stack.Screen
