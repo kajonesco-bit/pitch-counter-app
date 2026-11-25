@@ -1,6 +1,8 @@
+import Constants from 'expo-constants';
 import { router, useLocalSearchParams } from 'expo-router';
+import * as StoreReview from 'expo-store-review';
 import { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import SignaturePreview from '../../../components/SignaturePreview';
 import { Button, Card, colors, StatusBadge, styles as ui } from '../../../components/ui';
@@ -11,14 +13,41 @@ import {
   validateGame,
   validSignature,
 } from '../../../model/game';
+import {
+  canExportPdf,
+  FREE_SIGNED_REPORTS,
+  freeReportsRemaining,
+  signingDecision,
+} from '../../../model/entitlements';
 import { TeamSide, TEAM_SIDES } from '../../../model/types';
 import { createGamePdf, sharePdf } from '../../../pdf/exportPdf';
+import { appStateStore, useAppState } from '../../../state/useApp';
 import { gameStore, useGame } from '../../../state/useGames';
+
+const APP_VERSION = Constants.expoConfig?.version ?? '';
+
+function showPaywall(reason: 'limit' | 'export') {
+  router.navigate({ pathname: '/pro', params: { reason } });
+}
+
+/** Apple's own rating prompt, after a signed report was exported. Never from a button, never with an offer. */
+async function maybeAskForRating() {
+  try {
+    if (!appStateStore().recordSignedExport(APP_VERSION)) return;
+    // Apple never shows the prompt in TestFlight builds; isAvailableAsync is false there.
+    if (!(await StoreReview.isAvailableAsync()) || !(await StoreReview.hasAction())) return;
+    appStateStore().markReviewRequested(APP_VERSION);
+    await StoreReview.requestReview();
+  } catch {
+    // A rating prompt is never worth an error message.
+  }
+}
 
 /** Final review of both teams, then signatures and the PDF. */
 export default function ReviewScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const game = useGame(id);
+  const appState = useAppState();
   const [busy, setBusy] = useState(false);
 
   if (!game) {
@@ -32,6 +61,9 @@ export default function ReviewScreen() {
   const status = gameStatus(game);
   const problems = validateGame(game);
   const ready = problems.length === 0;
+  const decision = signingDecision(appState, game);
+  const exportable = canExportPdf(appState, game);
+  const remaining = freeReportsRemaining(appState);
 
   async function sharePdfNow() {
     if (!game) return;
@@ -39,10 +71,15 @@ export default function ReviewScreen() {
       Alert.alert('Please fix these first', problems.join('\n'));
       return;
     }
+    if (!exportable) {
+      showPaywall('export');
+      return;
+    }
     setBusy(true);
     try {
       const file = await createGamePdf(game);
       await sharePdf(file);
+      if (status === 'signed') await maybeAskForRating();
     } catch (error) {
       Alert.alert('Could not create the PDF', error instanceof Error ? error.message : String(error));
     } finally {
@@ -65,6 +102,10 @@ export default function ReviewScreen() {
   }
 
   function sign(side: TeamSide) {
+    if (decision === 'needs-pro') {
+      showPaywall('limit');
+      return;
+    }
     router.navigate({ pathname: '/game/[id]/sign', params: { id: game!.id, side } });
   }
 
@@ -97,6 +138,27 @@ export default function ReviewScreen() {
               • {p}
             </Text>
           ))}
+        </View>
+      ) : null}
+
+      {decision === 'uses-free-report' && status !== 'signed' ? (
+        <View style={ui.notice}>
+          <Text style={ui.noticeText}>
+            Free version: completing this signed report uses 1 of your {FREE_SIGNED_REPORTS} free signed
+            reports ({remaining} left). Pitch counting is always free.
+          </Text>
+          <Pressable onPress={() => router.navigate({ pathname: '/pro', params: { reason: 'settings' } })} hitSlop={8}>
+            <Text style={ui.link}>About Pitch Counter Pro</Text>
+          </Pressable>
+        </View>
+      ) : null}
+      {decision === 'needs-pro' ? (
+        <View style={ui.notice}>
+          <Text style={ui.noticeText}>
+            You’ve used your {FREE_SIGNED_REPORTS} free signed reports. Unlock Pitch Counter Pro (one-time purchase,
+            no subscription) to sign and export this report. Your counts are saved either way.
+          </Text>
+          <Button title="See Pitch Counter Pro" onPress={() => showPaywall('limit')} />
         </View>
       ) : null}
 

@@ -6,7 +6,7 @@ that both coaches can review, sign on one phone, and export as a printable PDF.
 The PDF is an **unofficial record**. It is not an official or approved form of
 any state association or league.
 
-## What it does (version 1.1)
+## What it does (version 1.2)
 
 - **Saved games**: every game is saved on the iPhone as you go. The first
   screen lists them, marked **Draft**, **Signed by 1 of 2**, or **Signed**.
@@ -25,7 +25,15 @@ any state association or league.
 - **PDF**: the same layout as before, with the unofficial-record disclaimer, a
   status line, and a report check code. Signed files end in `_Signed.pdf`.
 
+- **Pitch Counter Pro** (version 1.2): pitch counting stays free and unlimited.
+  The first 3 newly completed signed reports are free; a one-time in-app
+  purchase (no subscription) unlocks unlimited signed reports and PDF exports.
+  Reports signed before 1.2 stay free. Restore Purchases is on the Pro screen.
+  App Store Connect setup: [docs/app-store-connect-v1.2.md](docs/app-store-connect-v1.2.md).
+- **Ratings**: Apple's own rating prompt, only after a signed report is exported.
+
 Nothing leaves the phone unless you share a PDF. There are no accounts.
+Purchases are handled by Apple (StoreKit, through `expo-iap`).
 
 ## Install on your iPhone with TestFlight (no computer setup)
 
@@ -61,6 +69,9 @@ To ship a newer version later, repeat steps 2-3; the build number goes up
 automatically.
 
 ## Run it during development with Expo Go (Windows)
+
+> **From version 1.2 this no longer works**: the app includes Apple in-app
+> purchases, which Expo Go cannot load. Test through TestFlight instead (above).
 
 One-time setup:
 
@@ -99,6 +110,9 @@ choose **Allow**.
 | `src/storage/fileRepository.ts` | Game files on the iPhone |
 | `src/pdf/buildGameHtml.ts` | Layout of the PDF |
 | `src/pdf/exportPdf.ts` | Creates, saves and shares the PDF |
+| `src/model/entitlements.ts` | Free allowance, Pro, existing-game protection, rating timing |
+| `src/purchases/` | Pro purchase logic and the StoreKit (expo-iap) connection |
+| `src/app/pro.tsx` | Pitch Counter Pro screen (paywall, Restore Purchases) |
 | `tests/` | Automated tests |
 
 ## Checks

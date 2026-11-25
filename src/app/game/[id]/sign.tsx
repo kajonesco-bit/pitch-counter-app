@@ -4,9 +4,11 @@ import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-nati
 
 import SignaturePad, { SignatureDrawing } from '../../../components/SignaturePad';
 import { Button, colors, styles as ui } from '../../../components/ui';
-import { MAX_PERSON_NAME, sideLabel, teamTotal, validateGame } from '../../../model/game';
+import { isSignatureValid, MAX_PERSON_NAME, sideLabel, teamTotal, validateGame } from '../../../model/game';
+import { signingDecision } from '../../../model/entitlements';
 import { hasInk } from '../../../model/signature';
 import { TeamSide, TEAM_SIDES } from '../../../model/types';
+import { appStateStore } from '../../../state/useApp';
 import { gameStore, useGame } from '../../../state/useGames';
 
 /** One head coach types their name and signs with a finger. */
@@ -36,12 +38,20 @@ export default function SignScreen() {
       Alert.alert('The report is not complete', problems.join('\n'));
       return;
     }
-    gameStore().signGame(game.id, side, {
+    // This signature completes the report if the other coach has already signed it.
+    const completes = TEAM_SIDES.filter((s) => s !== side).every((s) => isSignatureValid(game, s));
+    if (completes && signingDecision(appStateStore().getState(), game) === 'needs-pro') {
+      // The drawing stays on this screen; after unlocking Pro, Save works.
+      router.navigate({ pathname: '/pro', params: { reason: 'limit' } });
+      return;
+    }
+    const signed = gameStore().signGame(game.id, side, {
       coachName,
       strokes: drawing.strokes,
       width: drawing.width,
       height: drawing.height,
     });
+    if (signed) appStateStore().recordCompletion(signed);
     router.back();
   }
 
